@@ -14,46 +14,41 @@ export class App extends Component {
     page: 1,
     loading: false,
     error: null,
-    hits: [],
+    hits: null,
     showModal: false,
     selectedHit: null,
+    loadMore: true,
+    images:[]
     
     }
 
   componentDidUpdate(prevProps, prevState) {
     const { page, query } = this.state;
-
+  console.log('Виконався запит');
     if (page !== prevState.page || query !== prevState.query) {
       this.setState({ loading: true});
-      //   fetch(`https://pixabay.com/api/?q=${this.state.query}&page=${this.state.page}&key=38409790-9d6abd70194af5cc66bb0293b&image_type=photo&orientation=horizontal&per_page=12`)
-      //     .then((response) => {
-      //       if (response.ok) {
-      //         return response.json();
-      //       }
-      //       return Promise.reject(new Error(`Not found ${this.state.query}`));
-      //     })
-    
-      fetchPhotos(query,page)
+    fetchPhotos(query,page)
         .then((data) => {
-          console.log(data);
-          this.setState({ hits: data.hits, loading: false, error: null });
+          console.log('data',data);
+          const newImages = page === 1 ? data.hits : [...this.state.images, ...data.hits];
+           this.setState({ images: newImages, loading: false, error: null });
+
+
+          // this.setState({ hits: data.hits, loading: false, error: null });
         })
+     
         .catch((error) => {
-          this.setState({ error, loading: false, hits: null });
+          this.setState({ error, loading: false, images: []  });
         });
+     
     }
-
-
-    }
-  
-    handleSetQuery = (query,page) => {
-      console.log(query,page);
+  }
+  handleSetQuery = (query,page) => {
+      console.log('query',query);
       this.setState({
         query,
         page: 1,
-        // hits:[]
-        
-      });
+         });
     }
     toggleModal = (selectedHit) => {
       this.setState(state => ({
@@ -62,42 +57,52 @@ export class App extends Component {
       }));
   }
   loadMoreImages = () => {
-    const {query,page } = this.state;
-    const nextPage = page + 1;
-     this.setState({ loading: true});
-    fetchPhotos(query,nextPage).then((data) => {
-      
-      this.setState(prevState => ({
-      hits: [...prevState.hits, ...data.hits],
-        loading: false,
-        page: nextPage,
-      error:null
-       
-        
-    
-        // loadMore: this.state.page < Math.ceil(data.totalHits / 12),
-       
-
-}))
-    }).catch((error => {
-       this.setState({ error, loading: false });
-    }))
-    
+     console.log('loadMoreImages викликано');
+    const { query, page, loading } = this.state;
+  if (loading) {
+      return;
     }
 
+    const nextPage = page + 1;
+    this.setState({ loading: true });
+
+    fetchPhotos(query, nextPage)
+      .then((data) => {
+        
+        if (data.hits.length > 0) {
+          const newImages = [...this.state.images, ...data.hits];
+          this.setState({
+            images: newImages,
+            loading: false,
+            page: nextPage,
+            error: null,
+             loadMore: nextPage < Math.ceil(data.totalHits / 12),
+          });
+        } else {
+    
+          this.setState({ loading: false, loadMore: false });
+          console.log("Всі дані завантажено, можна прибрати кнопку");
+        }
+      })
+      .catch((error) => {
+        this.setState({ error, loading: false });
+      });
+  }
 
 
 
 
  
     render() {
-      const { error, loading,hits, showModal, selectedHit } = this.state;
-      console.log(this.state);
+      const { error, loading,images,hits, showModal, selectedHit } = this.state;
+      console.log('images',images);
       return (
         <div className={css.container}>
           <Searchbar onSubmit={this.handleSetQuery} />
-          <ImageGallary hits={hits} openModal={this.toggleModal} />
-          {hits && hits.length > 0 && <Button action={this.loadMoreImages} />} 
+          <ImageGallary images={images} openModal={this.toggleModal} />
+        
+          <Button action={this.loadMoreImages} />
+         
             
 
           {loading && (
