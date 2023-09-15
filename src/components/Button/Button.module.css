@@ -7,4 +7,10 @@
   font-size: 18px;
   line-height: 1.2;
   font-weight: 500;
+  border-radius: 3px;
+}
+.loadMoreButton:hover {
+  color: #fff;
+  background-color: #7986d0;
+  border: 1px solid #7986d0;
 }

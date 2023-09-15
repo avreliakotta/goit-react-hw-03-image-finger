@@ -14,10 +14,10 @@ export class App extends Component {
     page: 1,
     loading: false,
     error: null,
-    hits: null,
+    hits: [],
     showModal: false,
     selectedHit: null,
-    // images:[]
+    
     }
 
   componentDidUpdate(prevProps, prevState) {
@@ -50,7 +50,8 @@ export class App extends Component {
       console.log(query,page);
       this.setState({
         query,
-        page
+        page: 1,
+        // hits:[]
         
       });
     }
@@ -60,40 +61,30 @@ export class App extends Component {
         selectedHit
       }));
   }
-//   loadMoreImages = () => {
-//     const { query, page,hits } = this.state;
-//     const nextPage = page + 1;
-//      this.setState({ loading: true});
-//     fetchPhotos(query, nextPage).then((data) => {
+  loadMoreImages = () => {
+    const {query,page } = this.state;
+    const nextPage = page + 1;
+     this.setState({ loading: true});
+    fetchPhotos(query,nextPage).then((data) => {
+      
+      this.setState(prevState => ({
+      hits: [...prevState.hits, ...data.hits],
+        loading: false,
+        page: nextPage,
+      error:null
        
-//   this.setState(prev =>({
-//  images: [...prev.images, ...hits],
-//  loadMore: this.state.page < Math.ceil(data.totalHits / 12 ),
-
-// }))
-//     }).catch((error => {
-//        this.setState({ error, loading: false });
-//     }))
+        
     
-  //   }
-// loadMoreImages = () => {
-//   const { query, page } = this.state;
-//   const nextPage = page + 1;
-  
-//   this.setState({ loading: true, page: nextPage }); 
+        // loadMore: this.state.page < Math.ceil(data.totalHits / 12),
+       
 
-//   fetchPhotos(query, nextPage)
-//     .then((data) => {
-//       this.setState((prevState) => ({
-//         images: [...prevState.images, ...data.hits],
-//         loading: false,
-//         error: null,
-//       }));
-//     })
-//     .catch((error) => {
-//       this.setState({ error, loading: false });
-//     });
-// }
+}))
+    }).catch((error => {
+       this.setState({ error, loading: false });
+    }))
+    
+    }
+
 
 
 
@@ -101,12 +92,13 @@ export class App extends Component {
  
     render() {
       const { error, loading,hits, showModal, selectedHit } = this.state;
-    
+      console.log(this.state);
       return (
         <div className={css.container}>
           <Searchbar onSubmit={this.handleSetQuery} />
           <ImageGallary hits={hits} openModal={this.toggleModal} />
-        <Button>Load more</Button>
+          {hits && hits.length > 0 && <Button action={this.loadMoreImages} />} 
+            
 
           {loading && (
           <ThreeDots
